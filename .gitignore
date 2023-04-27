@@ -1,0 +1,14 @@
+# misc
+.DS_Store
+.idea
+venv
+env
+.pio
+.vscode/*
+*/.vscode/*
+
+build/
+
+# STM32CubeIDE files
+*.launch
+.settings
