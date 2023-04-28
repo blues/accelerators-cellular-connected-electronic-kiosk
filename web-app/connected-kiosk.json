@@ -1,7 +1,7 @@
 {
   "org": "Acme Inc",
   "target": "RPi",
-  "product": "Cellular Connected Electronic Kiosk",
+  "product": "Cellular-Connected Electronic Kiosk",
   "version": "2022-04-26 Updates",
   "ver_major": 3,
   "ver_minor": 2,
