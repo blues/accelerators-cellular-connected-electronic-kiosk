@@ -17,7 +17,7 @@ This demo project is a simple web application built with HTML, CSS and vanilla J
 
 The app receives a list of city names (either from its local [`data.js`](./data.js) file, or from the Notehub environment variable `kiosk_data`) and uses the [Weather API](https://www.weatherapi.com/) to fetch the weather forecast for each city, then display that data onscreen and scroll through each city's weather, changing the city displayed every 4 seconds.   
 
-<!-- todo add video demo here via GitHub -->
+https://user-images.githubusercontent.com/20400845/235251916-3e76d47a-0771-4d8e-94dd-77d09238d0cf.mov
 
 ## Package up the app in a ZIP file
 
