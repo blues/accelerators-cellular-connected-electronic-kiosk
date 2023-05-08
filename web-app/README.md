@@ -1,27 +1,30 @@
 # Cellular-Connected Electronic Kiosk Web App
 
-The Cellular-Connected Electronic Kiosk web app is intended to be an example for how a web app could be built with a greater focus on the act of packaging up the app, uploading it to a cloud, and then using the Notecard to download the file via cellular, unpack it, and run the app locally on the Raspberry Pi.
+The Cellular-Connected Electronic Kiosk web app is intended to be an example for how a web app could be built with a greater focus on the acts of compressing the app and zipping it up, uploading it to a cloud, and then using the Notecard to download the zip file via cellular, unpack it, and run the app locally on the Raspberry Pi.
 
-## Development Overview 
+- [Cellular-Connected Electronic Kiosk Web App](#cellular-connected-electronic-kiosk-web-app)
+  - [Brief Demo Web App Overview](#brief-demo-web-app-overview)
+  - [How to package up the app in a ZIP file](#how-to-package-up-the-app-in-a-zip-file)
+    - [Create a fresh ZIP of the demo app](#create-a-fresh-zip-of-the-demo-app)
+  - [Upload the ZIP to a cloud](#upload-the-zip-to-a-cloud)
+    - [Create new S3 bucket](#create-new-s3-bucket)
+    - [Upload the ZIP to the S3 bucket](#upload-the-zip-to-the-s3-bucket)
+  - [Create a Notehub proxy route pointing towards the AWS bucket](#create-a-notehub-proxy-route-pointing-towards-the-aws-bucket)
+  - [Make sure the Notehub fleet environment variables are set](#make-sure-the-notehub-fleet-environment-variables-are-set)
+  - [Initiate the download of the ZIP to the Raspberry Pi](#initiate-the-download-of-the-zip-to-the-raspberry-pi)
+  - [Update the Notehub env vars and see the changes take effect in the app](#update-the-notehub-env-vars-and-see-the-changes-take-effect-in-the-app)
 
-To make the demo web app ready for download, complete the following steps.
-
-* Package up the app in a ZIP file
-* Upload the ZIP to a cloud
-* Initiate the download of the ZIP to the Raspberry Pi
-* Update the Notehub env vars and see the changes take effect in the app
-
-## Brief Web App Overview
+## Brief Demo Web App Overview
 
 This demo project is a simple web application built with HTML, CSS and vanilla JavaScript - it was built this way in an effort to keep the total app size small, and speed up download times to the Raspberry Pi.
 
-The app receives a list of city names (either from its local [`data.js`](./data.js) file, or from the Notehub environment variable `kiosk_data`) and uses the [Weather API](https://www.weatherapi.com/) to fetch the weather forecast for each city, then display that data onscreen and scroll through each city's weather, changing the city displayed every 4 seconds.   
+The app expects a list of city names (either from its local [`data.js`](./data.js) file, or from the Notehub environment variable `kiosk_data`) and uses the [Weather API](https://www.weatherapi.com/) to fetch the weather forecast for each city, then display that data onscreen and scroll through each city's weather, changing the city displayed on screen every 4 seconds.   
 
 https://user-images.githubusercontent.com/20400845/235251916-3e76d47a-0771-4d8e-94dd-77d09238d0cf.mov
 
-## Package up the app in a ZIP file
+## How to package up the app in a ZIP file
 
-In order to make this web app easy to download from an online location, it must first be stored in a compressed ZIP file.
+In order to make this app easy to download from an online location, it must first be stored in a compressed ZIP file.
 
 For the demo app, there are two shell script files that help automate this process:
 
@@ -30,7 +33,7 @@ For the demo app, there are two shell script files that help automate this proce
 
 The `generate.sh` file:
 
-1. Removes any outdated ZIP files previously generated in the project.
+1. Removes any outdated ZIP files previously generated for the project.
 2. Copies the `connected-kiosk.json` file - this file is critical to the Notehub firmware running correctly.
 3. Copies all the relevant files inside of the `web-app/` directory into a new directory named `resources/`.
    - This includes `index.htm`, `styles.css`, `data.js`, and a bunch of small image icons used to display current weather conditions and styled backgrounds inside of the `images/` folder and subfolders.
@@ -65,7 +68,7 @@ By the end of the script, there should be a new version of the `kiosk.zip` file 
 
 ## Upload the ZIP to a cloud 
 
-This new ZIP file for the kiosk needs to be uploaded to a repository where the Notehub can get to it via HTTP. For this example, an [Amazon Web Services S3 repo](https://aws.amazon.com/s3/) was used.
+This new ZIP file for the kiosk created in the previous section needs to be uploaded to a repository where the Notehub cloud can access it via HTTP. For this example, an [Amazon Web Services S3 repo](https://aws.amazon.com/s3/) was used.
 
 ### Create new S3 bucket
 
@@ -93,58 +96,58 @@ Amazon feels this is a very dangerous move, but uncheck the **Block all public a
 
 ### Upload the ZIP to the S3 bucket
 
-Now that the bucket is created, click on it in the list of buckets and upload the ZIP file to it by clicking the **Upload** button.
+Now that the bucket is created, click on its name in the list of buckets and upload the ZIP file to it by clicking the **Upload** button.
 
 **Add files to the bucket**
 
-On the Upload screen, click the **Add files** button and select the locally saved `kiosk.zip` file.
+On the Upload screen, click the **Add files** button and select the locally created `kiosk.zip` file.
 
 ![Upload the ZIP file to the bucket](images/aws-upload-zip.png)
 
 **Grant public-read access in permissions**
 
-Open the **Permissions** dropdown beneath where you selected the file, and select the "Grant public-read access" radio button, once again, Amazon is concerned when this is selected, but acknowledge the risk because Notehub needs to be able to reach and download the contents of this bucket.
+Open the **Permissions** dropdown beneath where you selected the file, and select the **Grant public-read access** radio button, once again, Amazon will let you know this is risky, but acknowledge the risk because Notehub needs to be able to reach and download the contents of this bucket.
 
 ![Make the ZIP file accessible to the public in the bucket](images/aws-public-zip.png)
 
 Then hit the **Upload** button at the end of the page.
 
-If all goes well, you'll see an Upload Status page with a success message confirming the ZIP file was successfully uploaded. Don't close this tab yet, though, we'll need some additional information from it shortly for Notehub.
+If all goes well, you'll see an Upload Status page with a success message confirming the ZIP file was successfully uploaded. Don't close this tab yet though, you'll need some additional information from it shortly for Notehub.
 
 ![Success message when file uploaded successfully to bucket](images/aws-successful-upload.png)
 
 ## Create a Notehub proxy route pointing towards the AWS bucket
 
-At this point, you should have already created a Notehub project for this app from following along with the main `README.md`.
+At this point, you should have already created a Notehub project for this app from following along with the main `README.md` documentation, if not, go ahead and do so now.
 
 **Make a new proxy route in Notehub**
 
-Inside of the project's **Routes** tab, click the **Create Route** button in the upper right hand corner of the screen, and select a "Proxy" route.
+Once the Notehub project exists, inside of the project's **Routes** tab, click the **Create Route** button in the upper right hand corner of the screen, and select a **Proxy** route type.
 
 ![Choose to create a new proxy Notehub route](images/notehub-create-proxy.png)
 
 **Get the URL for Notehub from the AWS ZIP file**
 
-Go back to the AWS S3 bucket with the ZIP file and click on the file name to see its information. Here in the kiosk.zip page, copy the "Object URL" - this is what goes into the "URL" input for the Notehub route.
+Go back to the AWS S3 bucket with the ZIP file and click on the file name to see its information. Here in the kiosk.zip page, copy the **Object URL** - this is what goes into the **URL** input of the Notehub route.
 
 ![Copy the Object URL from the AWS ZIP file's info](images/aws-bucket-url.png)
 
 **Paste the URL into the Notehub route and give the route an alias**
 
-Back over in the Notehub route, paste the AWS URL into the "URL" input and remove the `/kiosk.zip` from the end. Give the route an alias - something like `kiosk`. This alias must match what's in the Notehub environment variable `kiosk_content`, and it's how the Python script will know which ZIP file to download if there were multiple ZIP files contained within this same S3 bucket.
+Back over in the Notehub route, paste the AWS URL into the **URL** input and remove the `/kiosk.zip` from the end of the string. Give the route an alias - something like `kiosk`. This alias must match what's in the Notehub environment variable `kiosk_content`, and it's how the Python script will know which ZIP file to download if there are multiple ZIP files contained within the same S3 bucket.
 
 ![Paste the Object URL into the Notehub route and give it an alias](images/notehub-proxy.png)
 
 ## Make sure the Notehub fleet environment variables are set
 
-Once again, if you were following along with the main `README.md` for this project, you're aware that there are 4 Notehub environment variables needed for this to work.
+Once again, if you were following along with the main `README.md` for this project, you're aware that there are 4 Notehub environment variables needed for this application to work.
 
-* `kiosk_content` - names the ZIP file to be downloaded from the proxy route.
-* `kiosk_content_version` - a version number for the file specified by `kiosk_content` which you can increment to cause the Python script to download and use the new content.
-* `kiosk_download_time` - the hour of the day to check for updates to the ZIP file, or it can be set to `now` to download as soon as new content is detected.
+* `kiosk_content` - indicates the ZIP file to be downloaded from the proxy route.
+* `kiosk_content_version` - a version number for the file specified by `kiosk_content`. If the content's updated, this number can be incremented to cause the Python script to download the new content.
+* `kiosk_download_time` - the hour of the day for the Python script to check for updates to the `kiosk_content` env var. It can also be set to `now` to download as soon as new content is detected either by changing the `kiosk_content` variable or the `kiosk_content_version` number.
 * `kiosk_data` - An optional JSON object that can be used to overwrite the contents of the `data.js` in the ZIP file. 
 
-Keep in mind, that however the code in `data.js` is structured, the JSON in this environment variable must mimic it. For example, in the code `data.js` looks like this:
+Keep in mind, that however the code in `data.js` is structured, the JSON in this `kiosk_data` environment variable must mimic it. For example, in the code, `data.js` looks like this:
 
 ```javascript
 var data = {
@@ -158,7 +161,7 @@ So for the `kiosk_data` Notehub environment variable, I created the following JS
 {"cities": ["San Fernando", "Port of Spain", "Atlanta", "Shen Zhen"]}
 ```
 
-When the project's Python script runs on the Raspberry Pi, it will read this variable from Notehub and append `var data=` to the front of it, so it can sub in for the `data.js` file in the project.
+When the project's Python script runs on the Raspberry Pi, it will read this variable from Notehub and prepend `var data=` to the front of the list, so it can sub in for the `data.js` file in the project.
 
 Here's what this demo project's Notehub env vars look like all together.
 
@@ -168,16 +171,21 @@ Here's what this demo project's Notehub env vars look like all together.
 
 Now it's time to download the ZIP file to the Raspberry Pi via the Notecard's Python script.
 
-Following the instructions in the main `README.md`, clone this repo to the Raspberry Pi from GitHub, ensure the Pi's version of Python is 3.8 or above, open the repo with the IDE of your choice, and type the following command into a terminal at the root of the project substituting your own `data-dir`, `product`, and `route`.
+Following the instructions in the main `README.md`:
+
+1. Clone this repo to the Raspberry Pi from GitHub, 
+2. Ensure the Pi's version of Python is 3.8 or above, 
+3. Open the repo with VS Code or the IDE of your choice, and 
+4. Type the following command into a terminal at the root of the project substituting your own `data-dir`, `product`, and `route`.
 
 ```shell
-python kiosk.py --data-dir ~/kiosk-data/ --product com.blues.cellular_connected_kiosk_nf27 --route kiosk 
+python kiosk.py --data-dir ~/kiosk-data/ --product com.blues.cellular_XXXXXXXXX_XXXX --route kiosk 
 ```
 
-This should initiate the download of the ZIP file from the AWS bucket via Notehub. Depending on the size of the ZIP, the download may take a few minutes, but once it's finished, it will automatically open a Chromium web browser displaying the web app.
+This should initiate the download of the ZIP file from the AWS bucket via Notehub. Depending on the size of the ZIP, the download to the Pi may take a few minutes, but once it's finished, it will automatically open a Chromium web browser displaying the web app.
 
 ## Update the Notehub env vars and see the changes take effect in the app
 
-At this point, you may have noticed that the cities being displayed in the web app on the Pi are not the same ones contained within the `data.js` file in the ZIP. This is because the Notehub environment variable `kiosk_data` is overriding the list of cities contained within the `data.js` file.
+At this point, you may have noticed that the cities being displayed in the web app on the Pi are not the same ones contained within the `data.js` file in the ZIP. This is because the Notehub environment variable `kiosk_data` is overriding the list of cities contained within the `data.js` file. `kiosk_data` acts as a way of passing dynamic data to the web app without requiring a new ZIP file to be uploaded to the AWS bucket and downloaded by the Notecard.
 
-To test this theory, out go ahead and update the list of cities in the `kiosk_data` environment variable to four different cities and save the change. If you're watching the still running Python script on the Pi's terminal, you should see it print out `Writing new data: {"cities": ...}` within several seconds. If you switch back over to the Chromium tab displaying the web app, you should also see the list of cities being displayed update in short order without having to refresh the page.
+To test this theory, go ahead and update the list of cities in the `kiosk_data` environment variable in Notehub to four different cities and save the change. If you're watching the still running Python script on the Pi's terminal, you should see it print out `Writing new data: {"cities": ...}` within several seconds. Switch back over to the Chromium tab displaying the web app, you should also see the list of cities being displayed update in a short amount of time without having to refresh the page. Pretty cool.
