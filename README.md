@@ -1,6 +1,6 @@
 # Cellular-Connected Electronic Kiosk
 
-A cellular-based solution for downloading resources for an electronic kiosk display without an Internet connected, using a simple Python script.
+A cellular-based solution for downloading resources for an electronic kiosk display without an Internet connection, using a simple Python script.
 
 If you're in this repo, it's assumed you have already followed the basic hardware and Notehub cloud configuration software outlined in the main [`app-accelerators` repo](https://github.com/blues/app-accelerators/tree/main/27-cellular-connected-electronic-kiosk). If you have not, please do so before proceeding further.
 
@@ -18,9 +18,9 @@ Follow the [documentation](./scripts/README.md) to verify your Pi is up to date 
 
 ## Web Application
 
-This web application is not intended to serve as a production-ready, deployable application, rather it demonstrates how a simple, lightweight web app can be built and bundled up for download by the Notecard-enabled Raspberry Pi. 
+This web application is not intended to serve as a production-ready, deployable application. Rather it demonstrates how a simple, lightweight web app can be built and bundled up for download by the Notecard-enabled Raspberry Pi. 
 
-It will also show how Notehub environment variables can initiate fresh code downloads, or affect already downloaded web apps on the Raspberry Pi eliminating the need to download new code for minor modifications.
+It will also show how Notehub environment variables can initiate code downloads or even affect already downloaded web apps, reducing the need to download fresh code for minor changes.
 
 ![The cellular-connected electronic kiosk's demo web app](images/nf27-sample-web-app.png)
 

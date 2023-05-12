@@ -8,11 +8,12 @@ The Cellular-Connected Electronic Kiosk's software script is built using Python.
 
 > The default Python version that comes with the OS should be sufficient, but you can check the version at the command line with `python --version`. 
 
-2. You will also need to install a couple of Python packages. 
-3. Navigate into the root of this directory.
+2. Download this repo locally from GitHub to the Raspberry Pi.
+3. You will also need to install a couple of Python packages. 
+4. From the root of the repo, navigate to the `scripts/` directory.
 
 ```shell
-cd scripts/
+cd accelerators-cellular-connected-electronic-kiosk/scripts/
 ```
 4. Run the following commands to install the dependencies.
    
