@@ -201,7 +201,7 @@ def main(args):
             browser_launched = True
             active_html_path = Path(active_dir, 'resources', 'index.htm')
             subprocess.Popen(
-                shlex.split(f'chromium-browser file://{active_html_path}'))
+                shlex.split(f'chromium-browser --start-fullscreen file://{active_html_path}'))
 
         sleep(5)
 
