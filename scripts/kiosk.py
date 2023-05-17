@@ -10,6 +10,32 @@ import base64
 import zipfile
 import shlex
 import socket
+import signal
+
+interrupted = False
+
+
+def sigint_handler(signal, frame):
+    print("CTRL+C disabled. Program will be interrupted after Notecard "
+          "transaction completes.")
+    global interrupted
+    interrupted = True
+
+
+# Make a Notecard transaction, masking SIGINT (CTRL+C) until it's complete.
+def sigint_safe_transaction(ncard, req):
+    try:
+        # Mask SIGINT.
+        signal.signal(signal.SIGINT, sigint_handler)
+        rsp = ncard.Transaction(req)
+    finally:
+        # Restore the default signal handler.
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    if interrupted:
+        raise KeyboardInterrupt
+
+    return rsp
 
 
 def configure_i2c():
@@ -39,7 +65,7 @@ def set_time(ncard):
     got_time = False
     while iterations != timeout:
         req = {'req': 'card.time'}
-        rsp = ncard.Transaction(req)
+        rsp = sigint_safe_transaction(ncard, req)
         time = rsp['time']
         zone = rsp['zone'].split(',')[1]
         if zone != 'Unknown':
@@ -81,19 +107,25 @@ def download(data_dir, ncard, route, content, content_version, active_dir):
             'offset': offset,
             'max': chunk_len
         }
-        rsp = ncard.Transaction(req)
-        total = rsp['total']
-        if total == 'null':
-            print('retrying...')
+        rsp = sigint_safe_transaction(ncard, req)
+        status = rsp['result']
+        # 206 is returned when we're in the middle of the download (i.e. we
+        # still have more chunks to download).
+        if status != 206 and status != 200:
+            print('Bad response from web server, retrying...')
         else:
-            with open(zip_path, 'ab') as f:
-                f.write(base64.b64decode(rsp['payload']))
+            total = rsp['total']
+            if total == 'null':
+                print('NULL total, retrying...')
+            else:
+                with open(zip_path, 'ab') as f:
+                    f.write(base64.b64decode(rsp['payload']))
 
-            offset += chunk_len
-            if offset >= total:
-                break
+                offset += chunk_len
+                if offset >= total:
+                    break
 
-            print(f'{offset}/{total} downloaded')
+                print(f'{offset}/{total} downloaded')
 
     with zipfile.ZipFile(zip_path, 'r') as z:
         z.extractall(download_dir)
@@ -165,7 +197,7 @@ def main(args):
 
     while True:
         req = {'req': 'env.get'}
-        rsp_body = ncard.Transaction(req)['body']
+        rsp_body = sigint_safe_transaction(ncard, req)['body']
         env_data = rsp_body['kiosk_data']
         env_content = rsp_body['kiosk_content']
         env_content_version = rsp_body['kiosk_content_version']
@@ -201,7 +233,9 @@ def main(args):
             browser_launched = True
             active_html_path = Path(active_dir, 'resources', 'index.htm')
             subprocess.Popen(
-                shlex.split(f'chromium-browser --start-fullscreen file://{active_html_path}'))
+                shlex.split(
+                    f'chromium-browser --start-fullscreen file://{active_html_path}'
+                ))
 
         sleep(5)
 
